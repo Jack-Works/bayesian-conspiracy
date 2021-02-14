@@ -1,2 +1,2 @@
 hexo.extend.injector.register('head_end', '<link rel="stylesheet" href="/css/jack.css">')
-hexo.extend.injector.register('head_end', '<script src="http://jack-works.github.io/dist/custom-elements/index.js" type="module" async crossorigin></script>')
+hexo.extend.injector.register('head_end', '<script src="https://jack-works.github.io/dist/custom-elements/index.js" type="module" async crossorigin></script>')

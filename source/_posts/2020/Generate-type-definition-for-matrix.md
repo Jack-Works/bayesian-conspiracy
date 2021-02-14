@@ -10,7 +10,7 @@ categories: frontend
 cover: https://user-images.githubusercontent.com/5390719/69128591-a0d10f00-0ae7-11ea-8456-5b5c3f28aac0.png
 ---
 
-[The generator](http://github.com/jack-Works/generate-matrix-js-sdk-type/) and [the generated type definitions](https://github.com/Jack-Works/matrix-js-sdk-type) are available at GitHub.
+[The generator](https://github.com/jack-Works/generate-matrix-js-sdk-type/) and [the generated type definitions](https://github.com/Jack-Works/matrix-js-sdk-type) are available at GitHub.
 
 On Feb 2020, [@huan](https://github.com/huan) contribute his type definition to DefinitelyTyped [@types/matrix-js-sdk](https://www.npmjs.com/package/@types/matrix-js-sdk), you can compare and choose one.
 
