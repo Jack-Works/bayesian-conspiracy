@@ -1,0 +1,11 @@
+body[lang="en"] {
+    font-family: "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", system-ui, "Segoe UI", Helvetica, Arial,
+        sans-serif;
+    font-weight: normal;
+}
+body[lang^="zh"] {
+}
+footer.footer {
+    padding-bottom: 1rem;
+    padding-top: 1rem;
+}
