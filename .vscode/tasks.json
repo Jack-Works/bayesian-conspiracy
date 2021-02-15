@@ -1,0 +1,30 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "type": "npm",
+            "script": "server",
+            "problemMatcher": [
+                {
+                    "owner": "hexo",
+                    "pattern": {
+                        "regexp": "Error: placeholder",
+                        "file": 1,
+                        "line": 2,
+                        "column": 3,
+                        "severity": 4,
+                        "message": 5
+                    },
+                    "background": {
+                        "activeOnStart": true,
+                        "beginsPattern": "Start processing",
+                        "endsPattern": "Hexo is running"
+                    }
+                }
+            ],
+            "label": "npm: server",
+            "detail": "hexo server",
+            "isBackground": true
+        }
+    ]
+}

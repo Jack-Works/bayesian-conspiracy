@@ -3,6 +3,5 @@ title: {{ title }}
 date: {{ date }}
 tags:
 toc: true
-description:
 categories: frontend
 ---
