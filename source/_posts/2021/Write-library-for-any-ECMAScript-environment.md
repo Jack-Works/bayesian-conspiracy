@@ -10,13 +10,13 @@ tags:
     - deno
 ---
 
-"That's what be nice if my library can work across different ECMAScript environment..." you thought.
+"It would be nice if my library can work across different JavaScript environments..." you thought.
 
-Here is the guideline about how to achieve this goal. I'll list the most general principles first then explain them in detail and finally give you a recommended pattern to develop this kind of library.
+Here is a guideline about how to achieve this goal. I'll list the most general principles first then explain them in detail and finally give you a recommended pattern to develop this kind of library.
 
-To make the discussion easier, we will call the ability to _run on any ECMAScript environment_ as **zero host dependency**.
+To make the discussion easier, we will call the ability to _run on any ECMAScript environment_ as having **zero host dependency**.
 
-> When we saying _running on any ECMAScript environment_, we are meaning: users of the library can run this library on a modern ECMAScript environment (at least ES2015) that supports the ECMAScript module with proper setups (e.g. provide IO functions) without modifying the library code.
+> When we say _run on any ECMAScript environment_, we mean: users of the library can run this library on a modern ECMAScript environment (at least ES2015) that supports the ECMAScript module with proper setups (e.g. provide IO functions) without modifying the library code.
 
 Restrictions:
 
@@ -26,11 +26,11 @@ Restrictions:
 
 1. Be aware of language features (`eval`, `Date.now()`, `import()`, `Math.random()`, etc...) are disabled in some special environments.
 
-If you're strictly following the rules described above, you'll find that you're almost not able to develop anything. But this article is going to introduce a comfortable paradigm to developing libraries with zero host dependency.
+If you're strictly following the rules described above, you'll find that you're almost not able to develop anything. But this article is going to introduce a comfortable paradigm for developing libraries with zero host dependency.
 
 <!-- more -->
 
-I'll use an imaginary library called `use-delayed-effect` as an example and migrates this library step by step in this article. At the end of this article, this library will be zero host dependency.
+I'll use an imaginary library called `use-delayed-effect` as an example and migrates this library step by step in this article. At the end of this article, this library will have zero host dependency.
 
 ```js
 // constant.js
@@ -50,7 +50,7 @@ export function useDelayedEffect(f, deps, delay = _delay) {
 
 ## What thing I can't use?
 
-Did you know that `setTimeout`, `console.log`, and many things you familiar with are not part of ECMAScript specification but belong to the host (Node, Web, ...)? This means if an ECMAScript environment chooses not to implement it, it is still not violating the specification.
+Did you know that `setTimeout`, `console.log`, and many things you are familiar with are not part of ECMAScript specification but belong to the host (Node, Web, ...)? This means if an ECMAScript environment chooses not to implement it, it is still not violating the specification.
 
 For example, you cannot use `setTimeout` in a [Worklet](https://developer.mozilla.org/en-US/docs/Web/API/Worklet).
 
@@ -145,7 +145,7 @@ The most simple way to find out if you can use a thing is to run it in the [engi
 
 > ⚠ Note engine262 [provides a host definition of `print` and `console`](https://github.com/engine262/engine262.github.io/blob/bcec156ef1c1d1a223bfcb6133e2cad5c0c90588/src/worker.js#L58-L98), which are not in the language.
 
-Another way is to ask yourself, does it related to IO? If the answer is yes, it is a host defined global.
+Another way is to ask yourself, is it related to IO? If the answer is yes, it is a host defined global.
 
 ## But I need it!
 
@@ -161,7 +161,7 @@ export const sys = { base64encode: null };
 // allow users to provide their implementation
 ```
 
-Let's use the "sys object" way to refactor our library. We will add a `strange-environment-entry.js` for an imaginary environment that does not have `setTimeout` but `Timer.createTimer`.
+Let's use the "sys object" way to refactor our library. We will add a `strange-environment-entry.js` for an imaginary environment that does not have `setTimeout` but has `Timer.createTimer`.
 
 ```js
 // constant.js
@@ -201,7 +201,7 @@ export function createMyLib({ base64encode, base64decode }) {
 }
 ```
 
-Let's use the "factory pattern" way to refactor our library. We will add a `strange-environment-entry.js` for an imaginary environment that does not have `setTimeout` but `Timer.createTimer`.
+Let's use the "factory pattern" way to refactor our library. We will add a `strange-environment-entry.js` for an imaginary environment that does not have `setTimeout` but has `Timer.createTimer`.
 
 ```js
 // constant.js
@@ -246,7 +246,7 @@ import("./file");
 //     ~~~~~~~~
 ```
 
-This string is what we called as import specifiers. Actually, in the language specification, it just a meanless string. The meaning of this string is defined by the host too. Let's check out what import paths we have used in our library.
+This string is what we called as import specifiers. Actually, in the language specification, it is just a meanless string. The meaning of this string is defined by the host too. Let's check out what import paths we have used in our library.
 
 ```js
 import {} from "react";
@@ -394,7 +394,7 @@ import {} from "./core.ts";
 
 Unfortunately, the TypeScript compiler will complain about the error above, and it emitting ECMAScript files are keeping the .ts extension.
 
-Although there is some hacking way (e.g. using a transformer) to solve this problem, I suggest using [rollup to bundle files](#Use-an-ES-module-bundler) and use [rollup-plugin-dts](https://www.npmjs.com/package/rollup-plugin-dts) to bundle type definitions into one single file, finally, add a triple-slash comment at top of the output file.
+Although there is some hacky way (e.g. using a transformer) to solve this problem, I suggest using [rollup to bundle files](#Use-an-ES-module-bundler) and use [rollup-plugin-dts](https://www.npmjs.com/package/rollup-plugin-dts) to bundle type definitions into one single file, finally, add a triple-slash comment at top of the output file.
 
 ```ts
 /// <reference types="./output.d.ts" />
@@ -408,7 +408,7 @@ Here is [an example of the output JS file](https://cdn.jsdelivr.net/npm/async-ca
 
 -   `Error.prototype.stack` is not standard.
 -   `import.meta` is in the ES standard but `import.meta.url` is not.
--   `eval`, `new Function()`, etc is not available under a strict [Content Security Policy](https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP).
+-   `eval`, `new Function()`, etc are not available under a strict [Content Security Policy](https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP).
 -   [dynamic import() does not work in Service Worker](https://github.com/w3c/ServiceWorker/issues/1356)
 
 ## [SES (Secure ECMAScript)](https://github.com/tc39/proposal-ses) and [XS](https://blog.moddable.com/blog/secureprivate/)
@@ -422,7 +422,7 @@ Here is [an example of the output JS file](https://cdn.jsdelivr.net/npm/async-ca
 
 # End of the tour
 
-Now our library is zero host dependency. If someone wants to use this library in a special environment, they can import the core file and create their instance without patching your library.
+Now our library has zero host dependency. If someone wants to use this library in a special environment, they can import the core file and create their instance without patching your library.
 
 ```js
 // some unusual env
