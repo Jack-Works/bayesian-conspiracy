@@ -8,7 +8,7 @@ tags:
     - web component
 lang: en
 toc: true
-cover: https://github.com/Jack-Works/hybird-angular-react-custom-element/blob/master/dom.png?raw=true
+cover: https://raw.githubusercontent.com/Jack-Works/hybird-angular-react-custom-element/a7ef25b4bbbe56853c1961c2e03583f96448cf02/dom.png
 categories: frontend
 ---
 
@@ -26,7 +26,7 @@ They're referenceable. It raises an interesting question regarding whether we us
 
 <i-exp status="success"></i-exp>
 
-![DOM tree with Angular + React](https://github.com/Jack-Works/hybird-angular-react-custom-element/blob/master/dom.png?raw=true)
+![DOM tree with Angular + React](https://raw.githubusercontent.com/Jack-Works/hybird-angular-react-custom-element/a7ef25b4bbbe56853c1961c2e03583f96448cf02/dom.png)
 
 # The zeroth step
 
