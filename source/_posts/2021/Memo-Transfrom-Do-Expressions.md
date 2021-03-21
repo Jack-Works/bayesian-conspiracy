@@ -57,8 +57,7 @@ switch (((_C = undefined), expr)) { tracked_statements; }
 
 ## Skipped statements
 
-The following syntactic structures never contribute to the completion value of the do expression therefore not tracking
-for completion value insides it.
+The following syntactic structures never contribute to the completion value of the do expression therefore not tracking for completion value insides it.
 
 -   _ClassLike_
 -   _FunctionLike_
@@ -151,8 +150,7 @@ Let's talk about `return` first because it's only valid in a _Return_ context.
 
 So for return in a do expression, it should generate the code in the following way:
 
-Note this is not an in-place transform, it will transform the containing function entirely to make sure the variable
-scopes etc.
+Note this is not an in-place transform, it will transform the containing function entirely to make sure the variable scopes etc.
 
 ```js
 function a() {
