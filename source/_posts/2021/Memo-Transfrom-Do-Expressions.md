@@ -8,10 +8,7 @@ lang: en
 tags:
 ---
 
-This is a memo to me on how to implement the down level compiling of
-[ECMAScript proposal Do Expression](https://github.com/tc39/proposal-do-expressions/) and
-[Async do Expression](https://github.com/tc39/proposal-async-do-expressions) in
-[TypeScript](https://github.com/microsoft/TypeScript/pull/42437).
+This is a memo to me on how to implement the down level compiling of [ECMAScript proposal Do Expression](https://github.com/tc39/proposal-do-expressions/) and [Async do Expression](https://github.com/tc39/proposal-async-do-expressions) in [TypeScript](https://github.com/microsoft/TypeScript/pull/42437).
 
 Need to be reviewed to make sure I'm not missing anything.
 
