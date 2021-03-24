@@ -1,7 +1,7 @@
 ---
 title: ES Module for Web Extensions
 date: 2019-10-02 12:12:22
-updated: 2020-10-06 09:51:59
+updated: 2021-03-24 11:03:54
 tags:
     - esmodule
     - web extension
@@ -12,7 +12,7 @@ categories: frontend
 
 TLDR:
 
-If you only need to support Chrome, it is pretty easy if you're using manifest v2 🎇.
+It is pretty easy if you're using manifest v2 🎇 after 2021/05/18 (Firefox 89 release).
 
 For background page, popup, ..etc:
 
@@ -23,10 +23,9 @@ For background page, popup, ..etc:
 For content scripts:
 
 ```js
-import(chrome.runtime.getURL("..."));
+import(chrome.runtime.getURL('...'))
+import(browser.runtime.getURL('...'))
 ```
-
-It's much harder to support Firefox. Please read the full article to get details.
 
 <!-- more -->
 
@@ -34,15 +33,9 @@ It's much harder to support Firefox. Please read the full article to get details
 Please read the Conclusion section below.
 </i-exp>
 
-## About Firefox
+> Some outdated content about how to support Firefox before Firefox 89 has removed. Please refer to the git history of this article if you're interested.
 
-To use ESModule in WebExtension with Firefox🦊, please wait for Firefox to fix [the bug][fx-bug].
-
-> Update on 05/19/2020: I'm tired of waiting for Mozilla to fix this, and I decided to compile the code into SystemJS. SystemJS is fully compatible with ES Modules (after transform) that supports live binding, `import.meta` and dynamic import. I write a custom SystemJS runtime for Web Extension: [@magic-works/webextension-systemjs](https://www.npmjs.com/package/@magic-works/webextension-systemjs)
-
-> Update on 10/6/2020: It works but the solution is very ugly. You also need to take aware of the value of `import.meta.url`. If the ESM build is in the `es` folder and SystemJS build is in the `system` folder, you need to hook [System.constructor.prototype.createContext](https://github.com/systemjs/systemjs/blob/master/docs/hooks.md#createcontexturl---object) to rewrite it to `es` therefore you can load resource by `fetch('./cat.png', import.meta.url)` when the resource is in the `es` folder.
-
-## About node_modules
+# About node_modules
 
 To use npm packages, notice that `snowpack` is not strong enough as the webpack to handle so many cases, it may fail to build your dependencies but please have a try!
 
@@ -130,7 +123,7 @@ Browser supporting:
 
 \*: Need to use a HTML file
 
-# (❌ only works on Chrome!) Content script
+# (✔️) Content script
 
 Same as the background page, tried to run `import './shared.js'` directly.
 
@@ -150,30 +143,16 @@ Failed with a network error. Chrome tries to load the script from `https://examp
 import(chrome.runtime.getURL("/content.js"));
 ```
 
-You need to set [web_accessible_resources](https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/web_accessible_resources) in the manifest so the JS file is accessible in normal webpage. Open that in your own cautions.
+> Chrome only: You need to set [web_accessible_resources](https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/manifest.json/web_accessible_resources) in the manifest so the JS file is accessible in normal webpage. Set that in your own cautions.
 
 And it works! 🎇
-
-**But, it doesn't work on Firefox.** Firefox throws `No ScriptLoader found for the current context`. What?
-
-I searched the error message in the source code of Firefox.
-
-It shows when Firefox tries to execute `import(...)`, it needs a `ScriptLoader`(for resource loading). The `ScriptLoader` comes from the `Document` and the `Document` comes from a `Window`.
-
-By the document of WebExtension of [content script](https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/Content_scripts#Content_script_environment), it indicates content script may not have its own `Document`.
-
-By [globalThis in WebExtension content script doesn't implements Window](https://bugzilla.mozilla.org/show_bug.cgi?id=1577400) and [this !== window within content_scripts](https://bugzilla.mozilla.org/show_bug.cgi?id=1208775), content script even may not have its own `Window`!
-
-I'm not familiar with C++ so I'm not able to debug it to confirm my hypothesis or fix it.
-
-Now I'm blocked by [dynamic module import doesn't work in web extension content scripts][fx-bug].
 
 Browser supporting:
 
 |                      | Chrome | Firefox | Firefox for Android |
 | -------------------- | ------ | ------- | ------------------- |
 | `import { } from ''` | ❌     | ❌      | ❓                  |
-| `import('')`         | ✔️\*   | ❌      | ❓                  |
+| `import('')`         | ✔️\*   | ✔️\*?   | ❓                  |
 
 \*: Need to wrap with `chrome.runtime.getURL()`
 
@@ -242,7 +221,9 @@ try {
 }
 ```
 
-[`snowpack` currently cannot config to omit some of the packages](https://www.pika.dev/packages/snowpack/discuss/1113). And it will try to build everything even it is an optional dependency. This makes the compilation process slow even not available to work.
+[`snowpack` currently cannot config to omit some of the packages](https://www.pika.dev/packages/snowpack/discuss/1113).
+And it will try to build everything even it is an optional dependency. This makes the compilation process slow even not
+available to work.
 
 # Conclusion (in Nov 2020)
 
@@ -279,12 +260,6 @@ __using("some_library", { something });
 
 to track what dependencies webpack should bundle, then `__using` will set those references into global variables.
 
-## Browser support
-
-Despite the problem I met in the tool chain, the browser also have problem of running ES module directly. [Firefox does not support using dynamic import in the content script][fx-bug] therefore it is impossible to load a module as ES module. This bug has three year history so I think Mozilla won't fix it in short time. For this, my solution is, I also translating code into [SystemJS](https://www.npmjs.com/package/systemjs) (SystemJS is a full compatible module format to ES Module). Now, simple `tsc -p` is not enough for my need. Finally I build a complex build system based on [gulp](https://www.npmjs.com/package/gulp), and it finally works on Firefox and Chrome.
-
-But the solution is very ugly after applying so many workaround.
-
 ## Next step: HMR
 
 After it is being able to work, the next step is support HMR. It is possible to HMR in ES Module but I'm not willing to investigate more time in inventing tool chain. I gave up and return to the webpack.
@@ -301,7 +276,6 @@ Here is some useful resources.
 
 -   Chrome: [chrome.tabs.executeScript doesn't work when file name contains "~"](https://bugs.chromium.org/p/chromium/issues/detail?id=1108199) which `~` is used by Webpack chunk splitting by default.
 -   Chrome: [Extensions fail to install if the temp directory is under an NTFS junction](https://bugs.chromium.org/p/chromium/issues/detail?id=13044)
--   Firefox: [Dynamic module import doesn't work in webextension content scripts][fx-bug]
 -   Firefox: [this !== window within content_scripts](https://bugzilla.mozilla.org/show_bug.cgi?id=1208775)
 -   Firefox: [WebExtension executeScript fails with symlink when loaded temporarily on linux](https://bugzilla.mozilla.org/show_bug.cgi?id=1420286)
 -   Firefox: [Extension error of content script doesn't appear in DevTool console](https://bugzilla.mozilla.org/show_bug.cgi?id=1469304)
@@ -312,7 +286,6 @@ Here is some useful resources.
 
 -   pikapkg / [esm-hmr](https://npmjs.com/package/esm-hmr), ES Module Hot Module Reload specification.
 -   Jack-Works / [ttypescript-browser-like-import-transformer](https://www.npmjs.com/package/@magic-works/ttypescript-browser-like-import-transformer), compile ES Module into UMD.
--   Jack-Works / [webextension-systemjs](https://npmjs.com/package/@magic-works/webextension-systemjs), SystemJS runtime for WebExtension content script.
 -   Jack-Works / [commonjs-import.meta](https://npmjs.com/package/@magic-works/commonjs-import.meta), support `import.meta` in CommonJS via a transformer.
 -   Jack-Works / [web-extension-esmodule-test](https://github.com/Jack-Works/web-extension-esmodule-test), a test suit for ES Module in WebExtension.
 -   cevek / [ttypescript](https://npmjs.com/package/ttypescript), a wrapped `tsc` to use transformers easily.
