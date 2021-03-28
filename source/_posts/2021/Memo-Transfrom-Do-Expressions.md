@@ -8,13 +8,53 @@ lang: en
 tags:
 ---
 
-This is a memo to me on how to implement the down level compiling of [ECMAScript proposal Do Expression](https://github.com/tc39/proposal-do-expressions/) and [Async do Expression](https://github.com/tc39/proposal-async-do-expressions) in [TypeScript](https://github.com/microsoft/TypeScript/pull/42437).
+This is a memo to me on how to implement the down level compiling of
+[ECMAScript proposal Do Expression](https://github.com/tc39/proposal-do-expressions/) and
+[Async do Expression](https://github.com/tc39/proposal-async-do-expressions) in
+[TypeScript](https://github.com/microsoft/TypeScript/pull/42437).
 
 Need to be reviewed to make sure I'm not missing anything.
 
 [Report error](https://github.com/tc39/proposal-do-expressions/issues/63)
 
 <!-- more -->
+
+# Part 0: With no wrapper
+
+It is possible to generate a better output if the do expression only contains the following syntax elements:
+
+-   ExpressionStatement (`a; b; c` => `(a, b, c)`)
+-   VariableStatement (`var`)
+-   LexicalDeclaration (`let` and `const`)
+-   IfStatement (`if (expr) a; else b` => `expr ? a : b`)
+-   EmptyStatement
+
+Assume we have a valid `do expression` only containing the syntax elements mentioned above, we can generate the output
+by the following algorithm:
+
+1. Emit `ToExpression(do_expr.block.statements)`
+
+## `ToExpression(SyntaxList)`
+
+1. Let `result` be an empty `List<Expression>`.
+2. For each element `T` in `SyntaxList`,
+    1. If `T` is `ExpressionStatement`, append `T.expression` to `result`.
+    2. Else if `T` is `EmptyStatement`, continue.
+    3. Else if `T` is `IfStatement`, append `ToExpression::If(T)` to `result`.
+    4. Else if `T` is `VariableStatement` or `LexicalDeclaration`, append `ToExpression::var(T)`.
+3. Return all expression joined with CommaOperator (`,`)
+
+## `ToExpression::If(T)`
+
+For each block, convert the block by `ToExpression(SyntaxList)` then use the ternary expression (`a ? b : c`) to transform.
+
+## `ToExpression::var(T)`
+
+Hoist the `BindingIdentifier` or every binding name `BindingPattern` to the upper lexical scope (with `let`).
+
+Remove the `let`, `const`, `var` can turn `T` into an expression.
+
+> Question: Name might conflicts. Maybe we should limit it to only apply for ESModule or inside a function.
 
 # Part 1: Tracking completion values
 
@@ -57,7 +97,8 @@ switch (((_C = undefined), expr)) { tracked_statements; }
 
 ## Skipped statements
 
-The following syntactic structures never contribute to the completion value of the do expression therefore not tracking for completion value insides it.
+The following syntactic structures never contribute to the completion value of the do expression therefore not tracking
+for completion value insides it.
 
 -   _ClassLike_
 -   _FunctionLike_
@@ -92,7 +133,7 @@ const x =
     _CompletionValue)
 ```
 
-# Part 2: Create the correct wrapper for do expression
+# Part 2: Control flow in do expression
 
 There're 5 control flows I need to cover:
 
@@ -150,7 +191,8 @@ Let's talk about `return` first because it's only valid in a _Return_ context.
 
 So for return in a do expression, it should generate the code in the following way:
 
-Note this is not an in-place transform, it will transform the containing function entirely to make sure the variable scopes etc.
+Note this is not an in-place transform, it will transform the containing function entirely to make sure the variable
+scopes etc.
 
 ```js
 function a() {
@@ -166,11 +208,11 @@ function a() {
         const x =
             ((() => {
                 const a = 1
-                ;(_ControlFlowType = "return"), (_ControlFlowValue = a), null._
+                ;(_ControlFlowType = 'return'), (_ControlFlowValue = a), null._
             })(),
             _CompletionValue)
     } catch (e) {
-        if (_ControlFlowType == "return") return _ControlFlowValue
+        if (_ControlFlowType == 'return') return _ControlFlowValue
         throw e
     }
 }
@@ -178,9 +220,9 @@ function a() {
 
 ## break/continue
 
-This part is the same as the `return` case but works for _LabeledStatement_, _SwitchStatement_ and For loops.
+This part is the same as the `return` case but works for _LabeledStatement_, _SwitchStatement_, and For loops.
 
-I guess the following transform are safe. Please point out if I'm wrong.
+I guess the following transform is safe. Please point out if I'm wrong.
 
 ### LabeledStatement
 
@@ -233,4 +275,80 @@ outer: {
 
 ### Switch and for loops
 
-I guess it basically the same as LabeledStatement so I'm not going to transfrom it by hand.
+I guess it the same as LabeledStatement so I'm not going to transform it by hand.
+
+# Part 3: Special expressions in do expression
+
+## new.target and function.sent
+
+Hoist and replace.
+
+```js
+function x() {
+    const y = do {
+        if (!new.target) throw new Error()
+        1
+    }
+}
+```
+
+```js
+function x() {
+    const _newTarget = new.target
+    let _a
+    const y = do {
+        if (!_newTarget) throw new Error()
+        1
+    }
+}
+```
+
+## super() call and super.\* property
+
+Hoist to function
+
+```js
+class X extends Y {
+    constructor() {
+        let x = do {
+            super() // 1
+            super.foo() // 2
+            super.foo.call() // 3
+            super['foo'] // 4
+        }
+    }
+}
+```
+
+```js
+class X extends Y {
+    constructor() {
+        const super_call = (...x) => super(...x)
+        const super_get_foo = () => super.foo
+        const _super_get_prop = (x) => super[x]
+        let x = do {
+            super_call() // 1
+            super_get_foo().call(this) // 2
+            super_get_foo().x() // 3
+            _super_get_prop(x) // 4
+        }
+    }
+}
+```
+
+## arguments
+
+Call the wrapped function with upper level `arguments`.
+
+Note: This transformation is wrong. Since no one is use arguments in the new code today, we can mark it as a type
+script error to use `arguments` in the do expression.
+
+```js
+function x(a, b) {
+    function y(a, b) {
+        arguments[1] = 2
+    }
+    y.call(this, arguments)
+    console.log(b)
+}
+```
