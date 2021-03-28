@@ -50,11 +50,21 @@ For each block, convert the block by `ToExpression(SyntaxList)` then use the ter
 
 ## `ToExpression::var(T)`
 
-Hoist the `BindingIdentifier` or every binding name `BindingPattern` to the upper lexical scope (with `let`).
+For every binding name in the `BindingIdentifier` or `BindingPattern`, we create a new temp variable to replace them.
 
-Remove the `let`, `const`, `var` can turn `T` into an expression.
+```js
+const rnd = do {
+    let tmp = rand()
+    tmp * tmp;
+}
+```
 
-> Question: Name might conflicts. Maybe we should limit it to only apply for ESModule or inside a function.
+```js
+let _a
+const rnd = ((_a = rand()), _a * _a);
+```
+
+Note: The knowledge of "unique temp variable name" only archivable within an ES Module file or a function.
 
 # Part 1: Tracking completion values
 
