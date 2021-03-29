@@ -21,12 +21,13 @@ lang: en
 -   1️⃣ [Proposal: await operations](https://github.com/tc39/proposal-await.ops)
 -   0️⃣ [Proposal: ECMAScript parser](https://github.com/Jack-Works/proposal-ecmascript-parser)
 -   0️⃣ [Proposal: Serializer](https://github.com/Jack-Works/proposal-serializer)
+-   0️⃣ [Proposal: Freeze ArrayBuffer and Readonly view to ArrayBuffer](https://github.com/Jack-Works/proposal-freeze-arraybuffer-and-readonly-view)
 
 # ⚙ ECMAScript Libraries
 
 -   ⚡ [Async call RPC](https://github.com/Jack-Works/async-call-rpc#async-call), a light JSON RPC server & client with 0 dependency.
 -   🔀 [react-refresh-typescript](https://github.com/Jack-Works/react-refresh-transformer/tree/main/typescript), TypeScript version of `react-refresh/babel`.
--   📑 [efml parser](https://github.com/Jack-Works/ef-language-service), a efml parser designed for IDE usage scenarios.
+-   📑 [efml language service](https://github.com/Jack-Works/ef-language-service), a language service for the efml language.
 -   🕸 [@magic-works/ttypescript-browser-like-import-transformer](https://github.com/Jack-Works/ttypescript-browser-like-import-transformer#emit-a-es-module-web-project-by-only-ttypescript), use only <sup>t</sup>tsc to emit Web compatible ES Module output.
 -   🎨 [JSX devtools renderer](https://github.com/Jack-Works/jsx-jsonml-devtools-renderer#jsx-jsonml-devtools-renderer-), write and render JSX in Chrome devtools.
 -   🔀 [import.meta for CommonJS](https://github.com/Jack-Works/commonjs-import.meta#importmeta--__filename), a TypeScript transformer that add import.meta support for CommonJS module format.
