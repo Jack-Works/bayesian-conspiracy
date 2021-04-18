@@ -19,52 +19,127 @@ Need to be reviewed to make sure I'm not missing anything.
 
 <!-- more -->
 
-# Part 0: With no wrapper
+# Part 0: Optimized output
 
-It is possible to generate a better output if the do expression only contains the following syntax elements:
+It is possible to generate a better output if the `do expression` satisfies the following requirements:
 
--   ExpressionStatement (`a; b; c` => `(a, b, c)`)
--   VariableStatement (`var`)
--   LexicalDeclaration (`let` and `const`)
--   IfStatement (`if (expr) a; else b` => `expr ? a : b`)
--   EmptyStatement
+## Requirements
 
-Assume we have a valid `do expression` only containing the syntax elements mentioned above, we can generate the output
+Note: All those limitations does not across the declaration boundary.
+
+1. If the `do expression` appears at the following position, evaluate step 2 with `~TempVar`, otherwise evalute step 2 with `+TempVar`.
+    1. It appears in the `Initializer` or `ComputedPropertyName` of a non-static class field (private or public). (There is no place to hoist a temp variable.)
+    ```js
+    class T {
+        field = [do {}] // No
+        field2 = () => do {} // Ok
+        [do {}] = expr // No
+        static [do {}] = expr // Ok
+        static field = do {} // Ok
+    }
+    ```
+1. The do expression should only contains the following syntax.
+    -   `Block` (`BlockStatement`)
+    -   `EmptyStatement`
+    -   `ExpressionStatement`
+    -   `IfStatement`
+    -   `ThrowStatement`
+    -   `HoistableDeclaration[+TempVar]` (refers to functions with async/generator)
+    -   `ClassDeclaration[+TempVar]`
+    -   `LexicalDeclaration[+TempVar]` (`let` and `const`)
+2. The do expression should _not_ contains the following things:
+    - (The list is empty currently)
+
+> Note: We're allowing `let` and `const` but no `var` because it requires a rewrite to the upper scope.
+
+> Note: `DebuggerStatement` not included because a one-line expression is not friendly to the debugging.
+
+Assume we have a `do expression` meets the above requirement, we can generate the output
 by the following algorithm:
 
-1. Emit `ToExpression(do_expr.block.statements)`
+1. Emit `%ToExpression(do_expr.block)`.
 
-## `ToExpression(SyntaxList)`
+## `ToExpression(node: Block | BlockStatement)`
 
 1. Let `result` be an empty `List<Expression>`.
-2. For each element `T` in `SyntaxList`,
-    1. If `T` is `ExpressionStatement`, append `T.expression` to `result`.
-    2. Else if `T` is `EmptyStatement`, continue.
-    3. Else if `T` is `IfStatement`, append `ToExpression::If(T)` to `result`.
-    4. Else if `T` is `VariableStatement` or `LexicalDeclaration`, append `ToExpression::var(T)`.
-3. Return all expression joined with CommaOperator (`,`)
+1. Let `list` be clone of `node.StatementList`.
+1. Move all `HoistableDeclaration` to the top of the `list`.
+2. For each element `T` in `list`,
+    1. Assert: `ToExpression(T)` matches one of the overload of `ToExpression`.
+    1. Let `expr` be `ToExpression(T)`
+    1. If `expr` is not \~Empty\~, append `expr` to `result`.
+3. Return `result` (in the form of `(expr1, expr2, expr3, ...)`).
 
-## `ToExpression::If(T)`
+## `ToExpression(node: EmptyStatement)`
 
-For each block, convert the block by `ToExpression(SyntaxList)` then use the ternary expression (`a ? b : c`) to transform.
+1. Note: EmptyStatement (`;`) does not contribute to the result.
+1. Return \~Empty\~.
 
-## `ToExpression::var(T)`
+## `ToExpression(node: ExpressionStatement)`
 
-For every binding name in the `BindingIdentifier` or `BindingPattern`, we create a new temp variable to replace them.
+1. Return `node.Expression`.
 
+## `ToExpression(node: IfStatement)`
+
+1. Let `condition` be `node.Condition`.
+1. Let `left` be `%ToExpression(node.Then)`.
+1. Let `right` be `%ToExpression(node.Else)`.
+1. If `left` is \~Empty\~, Set `left` to `void 0`.
+1. If `right` is \~Empty\~, Set `right` to `void 0`.
+1. Return `(condition ? left : right)`.
+
+## `ToExpression(node: ThrowStatement)`
+
+1. Return `(e => { throw e })(node.Expression)`.
+
+## `ToExpression(node: HoistableDeclaration | ClassDeclaration)`
+
+1. Let `name` be `GetName(node)`.
+1. Let `x` be a new temp variable.
+1. Set all `Reference` that refers to `name` to refer `x` instead. (need scope analysis).
+1. Return `x = node`.
+
+Note: Function and Class both have expression version, it can be converted easily.
+
+Example:
+
+```js
+const x = do {
+    class T {}
+    function f() {}
+    f(new T())
+}
+// into
+var _a, _b
+const x = (
+    (_b = function f() {}),
+    (_a = class T {}),
+    _b(new _a)
+)
+```
+
+## `ToExpression(node: LexicalDeclaration)`
+
+1. Let `names` be all reference defined in the `node`.
+1. For each `name` in `names`,
+    1. Let `x` be a new temp variable.
+    1. Set all `Reference` that refers to `name` to refer `x` instead. (need scope analysis).
+1. Return `node` without `let` or `const` keyword.
+
+Note: All `LexicalDeclarations` are valid expression with `let` or `const` removed.
+
+`const { a, b } = c;` => `var _a, _b; ({ a: _a, b: _b } = c);`
+
+Example:
 ```js
 const rnd = do {
-    let tmp = rand()
-    tmp * tmp;
+    let {tmp, tmp2} = rand()
+    tmp * tmp2;
 }
+// into
+let _a, _b
+const rnd = (({ tmp: _a, tmp2: _b } = rand()), _a * _b);
 ```
-
-```js
-let _a
-const rnd = ((_a = rand()), _a * _a);
-```
-
-Note: The knowledge of "unique temp variable name" only archivable within an ES Module file or a function.
 
 # Part 1: Tracking completion values
 
