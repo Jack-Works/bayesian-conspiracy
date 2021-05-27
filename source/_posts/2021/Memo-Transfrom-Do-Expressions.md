@@ -27,26 +27,15 @@ It is possible to generate a better output if the `do expression` satisfies the 
 
 Note: All those limitations does not across the declaration boundary.
 
-1. If the `do expression` appears at the following position, evaluate step 2 with `~TempVar`, otherwise evalute step 2 with `+TempVar`.
-    1. It appears in the `Initializer` or `ComputedPropertyName` of a non-static class field (private or public). (There is no place to hoist a temp variable.)
-    ```js
-    class T {
-        field = [do {}] // No
-        field2 = () => do {} // Ok
-        [do {}] = expr // No
-        static [do {}] = expr // Ok
-        static field = do {} // Ok
-    }
-    ```
 1. The do expression should only contains the following syntax.
     -   `Block` (`BlockStatement`)
     -   `EmptyStatement`
     -   `ExpressionStatement`
     -   `IfStatement`
     -   `ThrowStatement`
-    -   `HoistableDeclaration[+TempVar]` (refers to functions with async/generator)
-    -   `ClassDeclaration[+TempVar]`
-    -   `LexicalDeclaration[+TempVar]` (`let` and `const`)
+    -   `HoistableDeclaration` (refers to functions with async/generator)
+    -   `ClassDeclaration`
+    -   `LexicalDeclaration` (`let` and `const`)
 2. The do expression should _not_ contains the following things:
     - (The list is empty currently)
 
@@ -435,5 +424,22 @@ function x(a, b) {
     }
     y.call(this, arguments)
     console.log(b)
+}
+```
+# Part 4: Special positions in do expression
+
+## Class fields initializer
+
+If do expression appears in a class field initializer, do the following transform.
+
+```js
+class T {
+    field = [do {}]
+}
+
+class T {
+    field = () => {
+        return [do {}]
+    }()
 }
 ```
