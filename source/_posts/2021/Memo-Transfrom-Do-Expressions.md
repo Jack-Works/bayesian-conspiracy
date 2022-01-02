@@ -6,6 +6,9 @@ date: 2021-03-21 15:58:12
 update: 2021-03-21 15:58:12
 lang: en
 tags:
+    - typescript
+    - transformer
+    - ecmascript
 ---
 
 This is a memo to me on how to implement the down level compiling of
