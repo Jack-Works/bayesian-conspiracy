@@ -25,6 +25,7 @@ This article contains my most used workflow when working on the TypeScript repo 
 
 - Run all tests: `npx gulp runtests-parallel`
 - Run tests that name matches "class": `npx gulp runtests -t=class`
+- Run test failed in the last run: `npx gulp runtests --failed`
 - Accept new test results: `npx gulp baseline-accept`
 - Run linter: `npx gulp lint`
 
