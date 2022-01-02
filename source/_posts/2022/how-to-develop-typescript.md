@@ -77,7 +77,7 @@ If you want to reload the debugging TS Server, run `> TypeScript: Restart TS ser
 
 ## Debug tests
 
-Follow the [debug language server](#debug-language-server) set up, and you'll find "Mocha Tests (currently opened test)" in the debug targets.
+Follow the [debug language server](#Debug-language-server) set up, and you'll find "Mocha Tests (currently opened test)" in the debug targets.
 
 Open a test you want to debug (e.g. `tests/cases/compiler/2dArrays.ts`), and start the debug.
 
