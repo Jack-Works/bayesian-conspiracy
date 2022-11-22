@@ -3,7 +3,7 @@ title: 'How to develop TypeScript'
 toc: true
 categories: frontend
 date: 2022-01-02 10:13:12
-update: 2022-01-02 10:13:12
+update: 2022-11-22 19:51:12
 lang: en
 tags:
     - typescript
@@ -13,27 +13,29 @@ This article contains my most used workflow when working on the TypeScript repo 
 
 <!-- more -->
 
+> Update on Nov 2022: I have updated this article to reflect [the latest changes in the TypeScript repo](https://github.com/microsoft/TypeScript/pull/51387).
+
 # Normal development workflow
 
 ## Build commands
 
-- Core compiler: `npx gulp watch-tsc` / `npx gulp tsc`
-- Language service: `npx gulp watch-tsserver` / `npx gulp tsserver`
-- ...or both: `npx gulp watch-min` / `npx gulp min`
+- Core compiler: `npx hereby watch-tsc` / `npx hereby tsc`
+- Language service: `npx hereby watch-tsserver` / `npx hereby tsserver`
+- ...or both: `npx hereby watch-min` / `npx hereby min`
 
 ## Tests
 
-- Run all tests: `npx gulp runtests-parallel`
-- Run tests that name matches "class": `npx gulp runtests -t=class`
-- Run test failed in the last run: `npx gulp runtests --failed`
-- Accept new test results: `npx gulp baseline-accept`
-- Run linter: `npx gulp lint`
+- Run all tests: `npx hereby runtests-parallel`
+- Run tests that name matches "class": `npx hereby runtests -t=class`
+- Run test failed in the last run: `npx hereby runtests --failed`
+- Accept new test results: `npx hereby baseline-accept`
+- Run linter: `npx hereby lint`
 
 ## Add a new error message
 
 - Open `src/compiler/diagnosticMessages.json`.
 - Add the message you want.
-- Run `npx gulp generate-diagnostics`.
+- Run `npx hereby generate-diagnostics`.
 - If VSCode doesn't show the new error message in the `Diagnostics` object, open `src/compiler/diagnosticInformationMap.generated.ts` in VSCode to load the latest result.
 
 # Debug
@@ -83,15 +85,3 @@ Follow the [debug language server](#Debug-language-server) set up, and you'll fi
 Open a test you want to debug (e.g. `tests/cases/compiler/2dArrays.ts`), and start the debug.
 
 ![Debugging tests](debug-test.png)
-
-# Some development tips
-
-## Use ES6+ syntax for the build
-
-This can reduce pain when debugging step by step (for...of will be transformed into ES5 otherwise!).
-
-Change `target` to `ES2020` (or later) in `src/tsconfig-base.json`, and run
-
-```sh
-git update-index --assume-unchanged ./src/tsconfig-base.json
-```
